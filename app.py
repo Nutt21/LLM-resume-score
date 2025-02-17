@@ -76,7 +76,7 @@ async def score_resumes(
 
             # Add the result to the list
             results.append({
-                "Candidate Name": file.filename,
+                "Candidate Name": os.path.splitext(file.filename)[0],
                 **scores,
                 "Total Score": total_score
             })
