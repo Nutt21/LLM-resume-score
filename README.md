@@ -181,14 +181,10 @@ Commit your changes and push to the branch.
 
 Submit a pull request.
 
-License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
 Contact
 
 For questions or feedback, please contact:
 
-Your Name  
+Nithish
 Email: [rnithishere@gmail.com]
 GitHub: Nutt21
