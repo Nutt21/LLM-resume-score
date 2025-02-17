@@ -1,17 +1,15 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import StreamingResponse
-import pdfplumber
-import docx
+
 from openai import OpenAI
 from typing import List
-from functions import score_resume
+from functions import score_resume, extract_text
 import os
 import pandas as pd
 from dotenv import load_dotenv
 from models import Output
 import json
 import io
-import uvicorn
 
 load_dotenv()
 
@@ -22,21 +20,17 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = FastAPI(title="Resume Scoring API", description="API to extract criteria from job descriptions and score resumes.")
 
-# Function to extract text from PDF or DOCX
-def extract_text(file: UploadFile):
-    if file.filename.endswith(".pdf"):
-        with pdfplumber.open(file.file) as pdf:
-            return "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
-    elif file.filename.endswith(".docx"):
-        doc = docx.Document(file.file)
-        return "\n".join([para.text for para in doc.paragraphs])
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported file type. Upload PDF or DOCX.")
-
-
 # Task 1: Extract Ranking Criteria
 @app.post("/extract-criteria")
 async def extract_criteria(file: UploadFile = File(...)):
+    """
+    Extracts ranking criteria from a job description.
+
+    - **file**: Upload a job description (PDF or DOCX)
+    
+    **Returns**:
+    - A JSON object containing the extracted criteria.
+    """
     text = extract_text(file)
     if not text:
         raise HTTPException(status_code=400, detail="No text extracted from the file.")
@@ -59,6 +53,15 @@ async def score_resumes(
     criteria: List[str] = Form(...),
     files: List[UploadFile] = File(...)
 ):
+    """
+    Scores resumes based on extracted criteria.
+
+    - **criteria**: List of ranking criteria (e.g., skills, certifications)
+    - **files**: Multiple resumes (PDF or DOCX)
+
+    **Returns**:
+    - An Excel file containing scores for each candidate.
+    """
     results = []
     for file in files:
         try:

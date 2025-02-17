@@ -2,6 +2,9 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import pdfplumber
+import docx
+from fastapi import UploadFile, HTTPException
 from typing import List
 
 load_dotenv()
@@ -9,6 +12,19 @@ load_dotenv()
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+
+# Function to extract text from PDF or DOCX
+def extract_text(file: UploadFile):
+    if file.filename.endswith(".pdf"):
+        with pdfplumber.open(file.file) as pdf:
+            return "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+    elif file.filename.endswith(".docx"):
+        doc = docx.Document(file.file)
+        return "\n".join([para.text for para in doc.paragraphs])
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type. Upload PDF or DOCX.")
+
 
 def score_resume(text: str, criteria: List[str]):
     scores = {}
